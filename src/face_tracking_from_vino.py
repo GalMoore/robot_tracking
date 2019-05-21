@@ -36,10 +36,10 @@ def callback(data):
 
     # print(counter)
 
-    if len(data.objects_vector)==1 and \
-    data.objects_vector[0].roi.width>120:
+    # if len(data.objects_vector)==1 and \
+    # data.objects_vector[0].roi.width>120:
 
-    # if len(data.objects_vector)==1:
+    if len(data.objects_vector)==1:
 
         # print(data.objects_vector[0].roi.width)
 
