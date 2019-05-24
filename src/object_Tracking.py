@@ -11,6 +11,7 @@ import rospy
 from object_msgs.msg import ObjectsInBoxes
 import subprocess
 import os
+from std_msgs.msg import String
 
 closed_lips_already = False
 biggest_face = 0
@@ -23,6 +24,11 @@ counter_two = 0
 array_count_person_in_vector = []
 counter_three = 0
 when_reach_this_counter_two_num_centre_face = 500
+pub = rospy.Publisher('is_person_nearby', String, queue_size=10)
+threshold_width = 400
+thresh_found = 0
+
+
 
 def callback(data):
     global closed_lips_already
@@ -35,6 +41,9 @@ def callback(data):
     global no_person_start_time 
     global counter_two
     global counter_three
+    global threshold_width
+    global thresh_found
+
 
 
     # if no detections at all - straighten head
@@ -51,7 +60,7 @@ def callback(data):
     # reset counter_three
     counter_three = 0
 
-    # check if one of the found classes if person
+    # check if one of the found classes is person
     for i in range(len(data.objects_vector)):
         if data.objects_vector[i].object.object_name !="person":
             counter_three = counter_three +1
@@ -62,6 +71,11 @@ def callback(data):
                 counter_two = counter_two +1
                 if counter_two>when_reach_this_counter_two_num_centre_face:
                     os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(5)))
+                    time.sleep(1)
+                    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(5)))
+                    time.sleep(1)
+                    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/eyes.py %s" %(str(5)))
+
                     headPositionX = 5
                     counter_two = 0
 
@@ -103,6 +117,20 @@ def callback(data):
                         headPositionX = headPositionX+0.2
                         os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(headPositionX)))
 
+                #  check if any of th persons found are bigger than threshold width - than
+                #  we will launch face detection instead of object detcetion that will filter  out small faces
+                if w>threshold_width:
+                    thresh_found = thresh_found +1
+                    print(thresh_found)
+                    if thresh_found == 40:
+                        pub.publish("yes")
+
+                else:
+                    pub.publish("no")
+                    thresh_found = 0
+                    print(thresh_found)
+
+
                 # # If you go UP
                 # if BBcircleY < circleY-150:
                 #     if headPositionY <9:
@@ -133,7 +161,7 @@ def track_vino():
     print("hello")
     os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(5)))
     time.sleep(1)
-    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(3)))
+    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(5)))
     time.sleep(1)
     os.system("python3 /home/gal/catkin_ws/src/robot_face/src/eyes.py %s" %(str(5))) 
     rospy.Subscriber("/ros_openvino_toolkit/detected_objects", ObjectsInBoxes, callback)
@@ -141,7 +169,7 @@ def track_vino():
 
 
 if __name__ == '__main__':
-    rospy.init_node('robot_tracking_from_vino')
+    rospy.init_node('robot_object_tracking_from_vino')
     track_vino()
 
 

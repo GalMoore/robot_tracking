@@ -11,13 +11,21 @@ import rospy
 from object_msgs.msg import ObjectsInBoxes
 import subprocess
 import os
+from std_msgs.msg import String
 
 closed_lips_already = False
 biggest_face = 0
 headPositionX = 5
 headPositionY = 5
 counter = 0
-
+object_index_to_track = 0
+no_person_start_time = True
+counter_two = 0
+array_count_person_in_vector = []
+counter_three = 0
+when_reach_this_counter_two_num_centre_face = 500
+# pub = rospy.Publisher('is_person_nearby', String, queue_size=10)
+# threshold_width = 450
 
 
 def callback(data):
@@ -26,136 +34,129 @@ def callback(data):
     global headPositionX
     global headPositionY
     global counter
-    # print(data.objects_vector)
-    # print(len(data.objects_vector))
-
-    # if data.objects_vector[0]
-
-    # if face found and it's wider than 170 pixel get coords
-    # os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(headPositionX)))
-
-    # print(counter)
-
-    # if len(data.objects_vector)==1 and \
-    # data.objects_vector[0].roi.width>120:
-
-    if len(data.objects_vector)==1:
-
-        # print(data.objects_vector[0].roi.width)
-
-        x = data.objects_vector[0].roi.x_offset
-        y = data.objects_vector[0].roi.y_offset
-        h = data.objects_vector[0].roi.height
-        w = data.objects_vector[0].roi.width
-
-        # headnod and position
-        # os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py 5")
-
-        # print(x,y,h,w)
-
-        circleX = 640/2
-        circleY= 400/2
-        BBcircleX= int(x+(w/2))
-        BBcircleY= int(y+(h/2))
-
-        # print(circleX)
-        # print(circleY)
-        # print(BBcircleX)
-        # print(BBcircleY)
-
-        # print("BBcircleX: " + str(BBcircleX))
-        # print("circleX: " + str(circleX))
-        if (counter%8==0):
-
-            #  If you go LEFT
-            if BBcircleX > circleX+120:
-                if headPositionX >1:
-                    headPositionX = headPositionX-1
-                    print("Im here!")
-                    # ohbot.move(ohbot.HEADTURN,headPositionX,1)
-                    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(headPositionX)))
-
-                    # ohbot.wait(0.)
-
-            #  If you go RIGHT
-            if BBcircleX < circleX-120:
-                if headPositionX <9:
-                    headPositionX = headPositionX+1
-                    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(headPositionX)))
-                    # ohbot.move(ohbot.HEADTURN,headPositionX,1)
-                    # ohbot.wait(3)
-
-            # If you go UP
-            if BBcircleY < circleY-100:
-                if headPositionY <9:
-                    headPositionY = headPositionY+3
-                    # os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(headPositionX)))
-                    # ohbot.move(ohbot.HEADNOD,headPositionY,1)
-                    # ohbot.wait(3)
-
-            #  If you go Down
-            if BBcircleY > circleY+100:
-                if headPositionY >1:
-                    headPositionY = headPositionY-1
-                    # os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(headPositionX)))
-
-                    # ohbot.move(ohbot.HEADNOD,headPositionY,1)
-                    # ohbot.wait(3)
+    global object_index_to_track
+    global start
+    global no_person_start_time 
+    global counter_two
+    global counter_three
+    global threshold_width
 
 
-        # move motors with this (arg 1, arg 2)
-        # os.system("python3 /home/gal/catkin_ws/src/robot_face/src/go_left.py 4 6")
+    # if no detections at all - straighten head
+    if (len(data.objects_vector)==0):
+        print(counter_two)
+        print("no faces found at all!")
+        counter_two = counter_two +1
+        if counter_two>when_reach_this_counter_two_num_centre_face:
+            os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(5)))
+            headPositionX = 5
+            counter_two = 0
 
 
+    # reset counter_three
+    counter_three = 0
+
+    # check if one of the found classes is person
+    for i in range(len(data.objects_vector)):
+        if data.objects_vector[i].object.object_name !="label #1":
+            counter_three = counter_three +1
+            # print(counter_three)
+            if counter_three==len(data.objects_vector):
+                print(counter_two)
+                print("NO FACE")
+                counter_two = counter_two +1
+                if counter_two>when_reach_this_counter_two_num_centre_face:
+                    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(5)))
+                    headPositionX = 5
+                    counter_two = 0
+
+            
+    # iterate through objects found and track a person (any person)
+    for i in range(len(data.objects_vector)):
+
+        # print("object index: " + str(i))
+        # print("object name: " + str(data.objects_vector[i].object.object_name))
+
+        if data.objects_vector[i].object.object_name == "label #1":
+            counter_two = 0
+            # if current object is person follow it
+            x = data.objects_vector[i].roi.x_offset
+            y = data.objects_vector[i].roi.y_offset
+            h = data.objects_vector[i].roi.height
+            w = data.objects_vector[i].roi.width
+
+            # grab dimensions of image and create circle in middle of frame
+            circleX = 640/2
+            circleY= 400/2
+            # create circle in centre of bounding box
+            BBcircleX= int(x+(w/2))
+            BBcircleY= int(y+(h/2))
+
+            # only X times per second
+            #  MUCH SLOWER THAN OBJECT DETECT!
+            if (counter%2==0):
+
+                #  If you go LEFT
+                if BBcircleX > circleX+50:
+                    if headPositionX >1:
+                        headPositionX = headPositionX-0.2
+                        os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(headPositionX)))
 
 
+                #  If you go RIGHT
+                if BBcircleX < circleX-50:
+                    if headPositionX <9:
+                        headPositionX = headPositionX+0.2
+                        os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(headPositionX)))
 
-    else:
-        "nope"
+                #  check if any of th persons found are bigger than threshold width - than
+                #  we will launch face detection instead of object detcetion that will filter  out small faces
+                # if w>threshold_width:
+                #     pub.publish("yes")
 
-    counter = counter +1
-
-
-
-
-    # # if no faces found = close lips
-    # if len(data.objects_vector)==0 and closed_lips_already!=True:
-    #     python_bin3 = "/usr/bin/python3"
-    #     subprocess.Popen([python_bin3, "/home/gal/catkin_ws/src/robot_face/src/close_lips.py"]).wait()
-    #     closed_lips_already = True
-
+                # else:
+                #     pub.publish("no")
 
 
-    # # if more than one face = open lips
-    # elif len(data.objects_vector)>=1:
-    #     python_bin3 = "/usr/bin/python3"
-    #     subprocess.Popen([python_bin3, "/home/gal/catkin_ws/src/robot_face/src/open_lips.py"]).wait()
-    #     closed_lips_already = False
+                # If you go UP
+                if BBcircleY < circleY-50:
+                    if headPositionY <9:
+                        headPositionY = headPositionY+0.5
+                        os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(headPositionY)))
+                        # ohbot.move(ohbot.HEADNOD,headPositionY,1)
+                        # ohbot.wait(3)
 
-    # else:
-    #     pass
+                # #  If you go Down
+                if BBcircleY > circleY+50:
+                    if headPositionY >1:
+                        headPositionY = headPositionY-0.5
+                        os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(headPositionY)))
 
+                        # ohbot.move(ohbot.HEADNOD,headPositionY,1)
+                        # ohbot.wait(3)
 
+        # all objects recognized but not person will go here
+        # even when person is identified
+        else:
+            pass
 
-
+        # counter will run at somewhere between 15 and 70 fps
+        counter = counter +1
 
 
 def track_vino():
     print("hello")
-    # RESET ROBOT BEFORE START
-    # ohbot.move(ohbot.HEADTURN,headPositionX,1)
-    # ohbot.move(ohbot.HEADNOD,headPositionY,1)
-    # ohbot.move(ohbot.EYETURN,5,1)
     os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(5)))
     time.sleep(1)
-    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(9)))
+    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(5)))
+    time.sleep(1)
+    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/eyes.py %s" %(str(5))) 
     rospy.Subscriber("/ros_openvino_toolkit/face_detection", ObjectsInBoxes, callback)
     rospy.spin()
 
 
-
 if __name__ == '__main__':
-    rospy.init_node('robot_tracking_from_vino')
+    rospy.init_node('robot_face_tracking_from_vino')
     track_vino()
 
 
