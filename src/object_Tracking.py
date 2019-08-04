@@ -86,7 +86,15 @@ def callback(data):
         # print("object index: " + str(i))
         # print("object name: " + str(data.objects_vector[i].object.object_name))
 
-        if data.objects_vector[i].object.object_name == "person":
+        # if data.objects_vector[i].object.object_name == "person":
+        # if data.objects_vector[i].object.object_name == "person" and data.objects_vector[i].roi.height >200 :   
+
+        if data.objects_vector[i].object.object_name == "person" and data.objects_vector[i].roi.width >250 and data.objects_vector[i].roi.height >200 :   
+            # print("width")
+            # print(data.objects_vector[i].roi.width)
+            # print("height")
+            # print(data.objects_vector[i].roi.height)
+
             counter_two = 0
             # if current object is person follow it
             x = data.objects_vector[i].roi.x_offset

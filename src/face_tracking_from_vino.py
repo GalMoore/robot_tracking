@@ -14,7 +14,6 @@ import os
 from std_msgs.msg import String
 
 closed_lips_already = False
-biggest_face = 0
 headPositionX = 5
 headPositionY = 5
 counter = 0
@@ -30,7 +29,6 @@ when_reach_this_counter_two_num_centre_face = 500
 
 def callback(data):
     global closed_lips_already
-    global biggest_face
     global headPositionX
     global headPositionY
     global counter
@@ -74,10 +72,15 @@ def callback(data):
     # iterate through objects found and track a person (any person)
     for i in range(len(data.objects_vector)):
 
+        # print(data.objects_vector[i].roi.width)
+
+
         # print("object index: " + str(i))
         # print("object name: " + str(data.objects_vector[i].object.object_name))
 
-        if data.objects_vector[i].object.object_name == "label #1":
+        # if data.objects_vector[i].object.object_name == "label #1":
+        if data.objects_vector[i].object.object_name == "label #1" and data.objects_vector[i].roi.width>100:
+
             counter_two = 0
             # if current object is person follow it
             x = data.objects_vector[i].roi.x_offset
