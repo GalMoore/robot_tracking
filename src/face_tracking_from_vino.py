@@ -12,6 +12,9 @@ from object_msgs.msg import ObjectsInBoxes
 import subprocess
 import os
 from std_msgs.msg import String
+from os.path import expanduser
+home = expanduser("~") + "/"
+# os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(5)))
 
 closed_lips_already = False
 headPositionX = 5
@@ -46,7 +49,8 @@ def callback(data):
         print("no faces found at all!")
         counter_two = counter_two +1
         if counter_two>when_reach_this_counter_two_num_centre_face:
-            os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(5)))
+
+            os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(5)))
             headPositionX = 5
             counter_two = 0
 
@@ -64,7 +68,7 @@ def callback(data):
                 print("NO FACE")
                 counter_two = counter_two +1
                 if counter_two>when_reach_this_counter_two_num_centre_face:
-                    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(5)))
+                    os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(5)))
                     headPositionX = 5
                     counter_two = 0
 
@@ -103,14 +107,16 @@ def callback(data):
                 if BBcircleX > circleX+50:
                     if headPositionX >1:
                         headPositionX = headPositionX-0.2
-                        os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(headPositionX)))
+                        os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(headPositionX)))
 
 
                 #  If you go RIGHT
                 if BBcircleX < circleX-50:
                     if headPositionX <9:
                         headPositionX = headPositionX+0.2
-                        os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(headPositionX)))
+                      # os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(5)))
+
+                        os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(headPositionX)))
 
                 #  check if any of th persons found are bigger than threshold width - than
                 #  we will launch face detection instead of object detcetion that will filter  out small faces
@@ -125,7 +131,7 @@ def callback(data):
                 if BBcircleY < circleY-50:
                     if headPositionY <9:
                         headPositionY = headPositionY+0.5
-                        os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(headPositionY)))
+                        os.system("python3 {}catkin_ws/src/robot_face/src/headnod.py {}".format(home,str(headPositionY)))
                         # ohbot.move(ohbot.HEADNOD,headPositionY,1)
                         # ohbot.wait(3)
 
@@ -133,7 +139,7 @@ def callback(data):
                 if BBcircleY > circleY+50:
                     if headPositionY >1:
                         headPositionY = headPositionY-0.5
-                        os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(headPositionY)))
+                        os.system("python3 {}catkin_ws/src/robot_face/src/headnod.py {}".format(home,str(headPositionY)))
 
                         # ohbot.move(ohbot.HEADNOD,headPositionY,1)
                         # ohbot.wait(3)
@@ -149,11 +155,13 @@ def callback(data):
 
 def track_vino():
     print("hello")
-    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headturn.py %s" %(str(5)))
+    # os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(5)))
+
+    os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(5)))
     time.sleep(1)
-    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/headnod.py %s" %(str(5)))
+    os.system("python3 {}catkin_ws/src/robot_face/src/headnod.py {}".format(home,str(5)))
     time.sleep(1)
-    os.system("python3 /home/gal/catkin_ws/src/robot_face/src/eyes.py %s" %(str(5))) 
+    os.system("python3 {}catkin_ws/src/robot_face/src/eyes.py {}".format(home,str(5))) 
     rospy.Subscriber("/ros_openvino_toolkit/face_detection", ObjectsInBoxes, callback)
     rospy.spin()
 
