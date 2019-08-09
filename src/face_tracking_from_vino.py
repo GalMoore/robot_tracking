@@ -14,7 +14,12 @@ import os
 from std_msgs.msg import String
 from os.path import expanduser
 home = expanduser("~") + "/"
-# os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(5)))
+
+import requests
+import math
+import random 
+import time
+from random import randrange
 
 closed_lips_already = False
 headPositionX = 5
@@ -29,6 +34,7 @@ when_reach_this_counter_two_num_centre_face = 500
 # pub = rospy.Publisher('is_person_nearby', String, queue_size=10)
 # threshold_width = 450
 
+message = "http://127.0.0.1:8081/motor={}?position={}?speed={}"
 
 def callback(data):
     global closed_lips_already
@@ -49,8 +55,8 @@ def callback(data):
         print("no faces found at all!")
         counter_two = counter_two +1
         if counter_two>when_reach_this_counter_two_num_centre_face:
+            requests.get(message.format(1,5,1))
 
-            os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(5)))
             headPositionX = 5
             counter_two = 0
 
@@ -68,7 +74,7 @@ def callback(data):
                 print("NO FACE")
                 counter_two = counter_two +1
                 if counter_two>when_reach_this_counter_two_num_centre_face:
-                    os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(5)))
+                    requests.get(message.format(1,5,1))
                     headPositionX = 5
                     counter_two = 0
 
@@ -77,8 +83,6 @@ def callback(data):
     for i in range(len(data.objects_vector)):
 
         # print(data.objects_vector[i].roi.width)
-
-
         # print("object index: " + str(i))
         # print("object name: " + str(data.objects_vector[i].object.object_name))
 
@@ -107,16 +111,15 @@ def callback(data):
                 if BBcircleX > circleX+50:
                     if headPositionX >1:
                         headPositionX = headPositionX-0.2
-                        os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(headPositionX)))
+                        requests.get(message.format(1,headPositionX,1))
 
 
                 #  If you go RIGHT
                 if BBcircleX < circleX-50:
                     if headPositionX <9:
                         headPositionX = headPositionX+0.2
-                      # os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(5)))
+                        requests.get(message.format(1,headPositionX,1))
 
-                        os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(headPositionX)))
 
                 #  check if any of th persons found are bigger than threshold width - than
                 #  we will launch face detection instead of object detcetion that will filter  out small faces
@@ -131,18 +134,16 @@ def callback(data):
                 if BBcircleY < circleY-50:
                     if headPositionY <9:
                         headPositionY = headPositionY+0.5
-                        os.system("python3 {}catkin_ws/src/robot_face/src/headnod.py {}".format(home,str(headPositionY)))
-                        # ohbot.move(ohbot.HEADNOD,headPositionY,1)
-                        # ohbot.wait(3)
+                        requests.get(message.format(0,headPositionY,1))
+
+
 
                 # #  If you go Down
                 if BBcircleY > circleY+50:
                     if headPositionY >1:
                         headPositionY = headPositionY-0.5
-                        os.system("python3 {}catkin_ws/src/robot_face/src/headnod.py {}".format(home,str(headPositionY)))
+                        requests.get(message.format(0,headPositionY,1))
 
-                        # ohbot.move(ohbot.HEADNOD,headPositionY,1)
-                        # ohbot.wait(3)
 
         # all objects recognized but not person will go here
         # even when person is identified
@@ -155,13 +156,11 @@ def callback(data):
 
 def track_vino():
     print("hello")
-    # os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(5)))
-
-    os.system("python3 {}catkin_ws/src/robot_face/src/headturn.py {}".format(home,str(5)))
+    requests.get(message.format(1,5,1))
     time.sleep(1)
-    os.system("python3 {}catkin_ws/src/robot_face/src/headnod.py {}".format(home,str(5)))
+    requests.get(message.format(0,5,1))
     time.sleep(1)
-    os.system("python3 {}catkin_ws/src/robot_face/src/eyes.py {}".format(home,str(5))) 
+    requests.get(message.format(2,5,1))
     rospy.Subscriber("/ros_openvino_toolkit/face_detection", ObjectsInBoxes, callback)
     rospy.spin()
 
