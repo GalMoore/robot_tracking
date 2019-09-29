@@ -1,21 +1,14 @@
 #!/usr/bin/env python
 # Software License Agreement (BSD License)
 
-# import sys
-# sys.path.insert(0, '/home/gal/dlib')
-# import face_recognition
-# import cv2
-# from ohbot import ohbot
 import time 
 import rospy
 from object_msgs.msg import ObjectsInBoxes
 import subprocess
 import os
 from std_msgs.msg import String
-
 from os.path import expanduser
 home = expanduser("~") + "/"
-
 import requests
 import math
 import random 
@@ -39,7 +32,6 @@ thresh_found = 0
 
 message = "http://127.0.0.1:8081/motor={}?position={}?speed={}"
 
-
 def callback(data):
     global closed_lips_already
     global biggest_face
@@ -54,18 +46,13 @@ def callback(data):
     global threshold_width
     global thresh_found
 
-
     # if no detections at all - straighten head
     if (len(data.objects_vector)==0):
-        # print(counter_two)
-        # print("no objects at all!")
         counter_two = counter_two +1
         if counter_two>when_reach_this_counter_two_num_centre_face:
             requests.get(message.format(1,5,1))
-
             headPositionX = 5
             counter_two = 0
-
 
     # reset counter_three
     counter_three = 0
@@ -74,10 +61,7 @@ def callback(data):
     for i in range(len(data.objects_vector)):
         if data.objects_vector[i].object.object_name !="person":
             counter_three = counter_three +1
-            # print(counter_three)
             if counter_three==len(data.objects_vector):
-                # print(counter_two)
-                # print("NO PERSON")
                 counter_two = counter_two +1
                 if counter_two>when_reach_this_counter_two_num_centre_face:
                     requests.get(message.format(1,5,1))
@@ -88,15 +72,10 @@ def callback(data):
                     headPositionX = 5
                     counter_two = 0
 
-            
     # iterate through objects found and track a person (any person)
     for i in range(len(data.objects_vector)):
 
-        if data.objects_vector[i].object.object_name == "person" and data.objects_vector[i].roi.width >250 and data.objects_vector[i].roi.height >200 :   
-            # print("width")
-            # print(data.objects_vector[i].roi.width)
-            # print("height")
-            # print(data.objects_vector[i].roi.height)
+        if data.objects_vector[i].object.object_name == "person" and data.objects_vector[i].roi.width >125 and data.objects_vector[i].roi.height >200 :   
 
             counter_two = 0
             # if current object is person follow it
@@ -121,13 +100,23 @@ def callback(data):
                         headPositionX = headPositionX-0.2
                         requests.get(message.format(1,headPositionX,1))
 
-
-
                 #  If you go RIGHT
                 if BBcircleX < circleX-50:
                     if headPositionX <9:
                         headPositionX = headPositionX+0.2
                         requests.get(message.format(1,headPositionX,1))
+
+                # # If you go UP
+                # if BBcircleY < circleY-50:
+                #     if headPositionY <9:
+                #         headPositionY = headPositionY+0.5
+                #         requests.get(message.format(0,headPositionY,1))
+
+                # # #  If you go Down
+                # if BBcircleY > circleY+50:
+                #     if headPositionY >1:
+                #         headPositionY = headPositionY-0.5
+                #         requests.get(message.format(0,headPositionY,1))
 
                 #  check if any of th persons found are bigger than threshold width - than
                 #  we will launch face detection instead of object detcetion that will filter  out small faces
@@ -142,17 +131,11 @@ def callback(data):
                     thresh_found = 0
                     # print(thresh_found)
 
-
-
-        # all objects recognized but not person will go here
-        # even when person is identified
-
         else:
             pass
 
         # counter will run at somewhere between 15 and 70 fps
         counter = counter +1
-
 
 def track_vino():
     print("hello")
