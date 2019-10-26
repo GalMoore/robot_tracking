@@ -122,10 +122,10 @@ def callback(data):
 
 def track_vino():
     print("hello")
-    requests.get(message.format(1,5,1))
-    time.sleep(1)
-    requests.get(message.format(0,5,1))
-    time.sleep(1)
+    # requests.get(message.format(1,5,1))
+    # time.sleep(1)
+    # requests.get(message.format(0,5,1))
+    # time.sleep(1)
     requests.get(message.format(2,5,1))
     rospy.Subscriber("/ros_openvino_toolkit/face_detection", ObjectsInBoxes, callback)
     rospy.spin()
